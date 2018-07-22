@@ -86,18 +86,20 @@ void createframegrabber(int newsockfd)
             })
             ->start_capturing();
     ;
-    framgrabber->setFrameChangeInterval(std::chrono::milliseconds(100));
+    framgrabber->setFrameChangeInterval(std::chrono::milliseconds(1000));
 }
 
 void *TCPServer::Task(void *arg)
 {
 
+    cout << "connect success!!!" << endl;
     int n;
     int newsockfd = (long)arg;
     char msg[MAXPACKETSIZE];
     pthread_detach(pthread_self());
 
     createframegrabber(newsockfd);
+
     std::this_thread::sleep_for(std::chrono::seconds(100000));
 
     while (1) {

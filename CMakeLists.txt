@@ -80,9 +80,12 @@ include_directories(
 )
 add_library(${PROJECT_NAME} 
 	include/ScreenCapture.h 
+	include/TCPServer.h
+
 	include/internal/SCCommon.h 
 	include/internal/ThreadManager.h 
 	src/ScreenCapture.cpp 
+	src/TCPServer.cpp
 	src/SCCommon.cpp 
 	src/ThreadManager.cpp
 	${SCREEN_CAPTURE_PLATFORM_SRC}

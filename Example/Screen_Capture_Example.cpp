@@ -113,7 +113,6 @@ void createframegrabber()
         ->start_capturing();
 
     framgrabber->setFrameChangeInterval(std::chrono::milliseconds(100));
-    framgrabber->setMouseChangeInterval(std::chrono::milliseconds(100));
 }
 
 void createpartialframegrabber()

@@ -139,6 +139,7 @@ install (TARGETS ${PROJECT_NAME}
 
 install (FILES 
 	include/ScreenCapture.h 
+	include/TCPServer.h 
 	DESTINATION include
 )
 enable_testing() 

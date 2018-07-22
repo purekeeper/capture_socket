@@ -78,7 +78,7 @@ namespace Screen_Capture {
             Thread_ = std::thread([&]() {
                 ThreadManager ThreadMgr;
 
-                ThreadMgr.Init(Thread_Data_);
+                ThreadMgr.Init(Thread_Data_);   
 
                 while (!Thread_Data_->CommonData_.TerminateThreadsEvent) {
 

@@ -25,7 +25,7 @@ TCPServer tcp;
 
 int main()
 {
-    pthread_t msg;
+    //  pthread_t msg;
     tcp.setup(11999);
     tcp.receive();
     // if( pthread_create(&msg, NULL, loop, (void *)0) == 0)

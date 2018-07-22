@@ -76,8 +76,14 @@ void createframegrabber(int newsockfd)
                 auto imgbuffer(std::make_unique<unsigned char[]>(size));
                 ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
                 auto tempBuffer = (const char *)imgbuffer.get();
+                cout << "before===" << imgbuffer.get() << endl;
+                cout << "after===" << tempBuffer << endl;
                 cout << "length===" << strlen(tempBuffer) << endl;
-                send(newsockfd, tempBuffer, strlen(tempBuffer), 0);
+                if (send(newsockfd, tempBuffer, strlen(tempBuffer), 0) == 0) {
+                    framgrabber = NULL;
+                    close(newsockfd);
+                    return;
+                }
                 tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char *)imgbuffer.get());
                 if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - onNewFramestart).count() >=
                     1000) {
@@ -91,7 +97,6 @@ void createframegrabber(int newsockfd)
     ;
     framgrabber->setFrameChangeInterval(std::chrono::milliseconds(1000));
 }
-
 void *TCPServer::Task(void *arg)
 {
 

@@ -7,6 +7,7 @@
 #include <climits>
 #include <iostream>
 #include <locale>
+#include <string.h>
 #include <string>
 #include <thread>
 #include <vector>
@@ -74,7 +75,9 @@ void createframegrabber(int newsockfd)
                 auto size = Width(img) * Height(img) * sizeof(SL::Screen_Capture::ImageBGRA);
                 auto imgbuffer(std::make_unique<unsigned char[]>(size));
                 ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
-                send(newsockfd, imgbuffer.get(), sizeof(imgbuffer.get()) / sizeof(char), 0);
+                auto tempBuffer = (const char *)imgbuffer.get();
+                cout << "length===" << strlen(tempBuffer) << endl;
+                send(newsockfd, tempBuffer, strlen(tempBuffer), 0);
                 tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char *)imgbuffer.get());
                 if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - onNewFramestart).count() >=
                     1000) {

@@ -65,6 +65,8 @@ void createframegrabber(int newsockfd)
             auto mons = SL::Screen_Capture::GetMonitors();
             std::cout << "Library is requesting the list of monitors to capture!" << std::endl;
             for (auto &m : mons) {
+                m.Height = 200;
+                m.Width = 100;
                 std::cout << m << std::endl;
             }
             return mons;

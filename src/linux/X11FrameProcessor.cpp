@@ -61,11 +61,8 @@ namespace Screen_Capture {
 
         ShmInfo = std::make_unique<XShmSegmentInfo>();
 
-        XImage_ =
-            XShmCreateImage(SelectedDisplay, DefaultVisual(SelectedDisplay, scr), DefaultDepth(SelectedDisplay, scr), ZPixmap, NULL, ShmInfo.get(),
-                            //   Width(SelectedMonitor),
-                            //  Height(SelectedMonitor)
-                            200, 100);
+        XImage_ = XShmCreateImage(SelectedDisplay, DefaultVisual(SelectedDisplay, scr), DefaultDepth(SelectedDisplay, scr), ZPixmap, NULL,
+                                  ShmInfo.get(), Width(SelectedMonitor), Height(SelectedMonitor));
         ShmInfo->shmid = shmget(IPC_PRIVATE, XImage_->bytes_per_line * XImage_->height, IPC_CREAT | 0777);
 
         ShmInfo->readOnly = False;

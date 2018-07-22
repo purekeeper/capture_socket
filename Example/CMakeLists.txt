@@ -40,7 +40,6 @@ else()
 endif()
 
 add_executable(${PROJECT_NAME}  
-	lodepng.cpp
 	server.cpp
 )
 target_link_libraries(${PROJECT_NAME} screen_capture_lite ${${PROJECT_NAME}_PLATFORM_LIBS}) 

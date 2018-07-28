@@ -1175,7 +1175,7 @@ int tje_encode_to_file(const char* dest_path,
                        const int num_components,
                        const unsigned char* src_data)
 {
-    int res = tje_encode_to_file_at_quality(dest_path, 3, width, height, num_components, src_data);
+    int res = tje_encode_to_file_at_quality(dest_path, 1, width, height, num_components, src_data);
     return res;
 }
 

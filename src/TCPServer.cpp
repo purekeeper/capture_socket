@@ -55,47 +55,82 @@ inline std::ostream &operator<<(std::ostream &os, const SL::Screen_Capture::Moni
 }
 
 auto onNewFramestart = std::chrono::high_resolution_clock::now();
+size_t getSize(string path)
+{
+    FILE *file;
+    file = fopen(path.c_str(), "rb");
+    size_t sizeOfPic;
+
+    fseek(file, 0, SEEK_END); ///将文件指针移动文件结尾
+    sizeOfPic = ftell(file);  ///求出当前文件指针距离文件开始的字节数
+    fclose(file);
+
+    return sizeOfPic;
+}
 void createframegrabber(int newsockfd)
 {
+    FILE *file;
+
     realcounter = 0;
     onNewFramecounter = 0;
     framgrabber = nullptr;
-    framgrabber =
-        SL::Screen_Capture::CreateCaptureConfiguration([]() {
-            auto mons = SL::Screen_Capture::GetMonitors();
-            std::cout << "Library is requesting the list of monitors to capture!" << std::endl;
-            for (auto &m : mons) {
-                m.Height = 200;
-                m.Width = 100;
-                std::cout << m << std::endl;
-            }
-            return mons;
-        })
-            ->onNewFrame([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
-                auto r = realcounter.fetch_add(1);
-                auto s = std::to_string(r) + std::string("MONITORNEW_") + std::string(".jpg");
-                auto size = Width(img) * Height(img) * sizeof(SL::Screen_Capture::ImageBGRA);
-                auto imgbuffer(std::make_unique<unsigned char[]>(size));
-                ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
-                auto tempBuffer = (const char *)imgbuffer.get();
-                cout << "before===" << imgbuffer.get() << endl;
-                cout << "after===" << tempBuffer << endl;
-                cout << "length===" << strlen(tempBuffer) << endl;
-                if (send(newsockfd, tempBuffer, strlen(tempBuffer), 0) == 0) {
-                    framgrabber = NULL;
-                    close(newsockfd);
-                    return;
-                }
-                tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char *)imgbuffer.get());
-                if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - onNewFramestart).count() >=
-                    1000) {
-                    std::cout << "onNewFrame fps" << onNewFramecounter << std::endl;
-                    onNewFramecounter = 0;
-                    onNewFramestart = std::chrono::high_resolution_clock::now();
-                }
-                onNewFramecounter += 1;
-            })
-            ->start_capturing();
+    framgrabber = SL::Screen_Capture::CreateCaptureConfiguration([]() {
+                      auto mons = SL::Screen_Capture::GetMonitors();
+                      std::cout << "Library is requesting the list of monitors to capture!" << std::endl;
+                      for (auto &m : mons) {
+                          m.Height = 200;
+                          m.Width = 100;
+                          std::cout << m << std::endl;
+                      }
+                      return mons;
+                  })
+                      ->onNewFrame([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
+                          auto r = realcounter.fetch_add(1);
+                          auto s = std::string("capture.jpg");
+                          auto size = Width(img) * Height(img) * sizeof(SL::Screen_Capture::ImageBGRA);
+                          auto imgbuffer(std::make_unique<unsigned char[]>(size));
+                          ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
+                          auto tempBuffer = (const char *)imgbuffer.get();
+                          if (send(newsockfd, tempBuffer, strlen(tempBuffer), 0) == 0) {
+                              framgrabber = NULL;
+                              close(newsockfd);
+                              return;
+                          }
+                          tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char *)imgbuffer.get());
+                          //读取并发送
+                          //发送文件大小
+                          int fileSize = getSize("capture.jpg");
+                          char file_size[256];
+                          sprintf(file_size, "%d", fileSize);
+                          send(newsockfd, file_size, strlen(file_size), 0);
+                          //服务端确认收到
+                          int sizeRecv_size;
+                          char sizeBuf[1024];
+                          sizeRecv_size = recv(newsockfd, sizeBuf, 1024, 0);
+                        //   char *sizeRecv = new char[sizeRecv_size + 1];
+                        //   for (int i = 0; i < sizeRecv_size; i++)
+                        //       sizeRecv[i] = sizeBuf[i];
+                        //   sizeRecv[sizeRecv_size] = '\0';
+                        //   if (strcmp(sizeRecv, "size_recv") != 0)
+                        //       break;
+                          file = fopen("capture.jpg", "rb");
+                          char buf[1024];
+                          while (!feof(file)) {
+                              memset(buf, 0, sizeof(buf));
+                              size_t readlen = fread(buf, sizeof(char), sizeof(buf), file);
+                              send(newsockfd, buf, readlen, 0);
+                          }
+                          fclose(file);
+                          // if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() -
+                          // onNewFramestart).count() >=
+                          //     1000) {
+                          //     std::cout << "onNewFrame fps" << onNewFramecounter << std::endl;
+                          //     onNewFramecounter = 0;
+                          //     onNewFramestart = std::chrono::high_resolution_clock::now();
+                          // }
+                          // onNewFramecounter += 1;
+                      })
+                      ->start_capturing();
     ;
     framgrabber->setFrameChangeInterval(std::chrono::milliseconds(1000));
 }

@@ -85,34 +85,31 @@ void createframegrabber(int newsockfd)
                       return mons;
                   })
                       ->onNewFrame([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
+                          cout << "onNewFrame!!!!";
                           auto r = realcounter.fetch_add(1);
                           auto s = std::string("capture.jpg");
                           auto size = Width(img) * Height(img) * sizeof(SL::Screen_Capture::ImageBGRA);
                           auto imgbuffer(std::make_unique<unsigned char[]>(size));
                           ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
                           auto tempBuffer = (const char *)imgbuffer.get();
-                          if (send(newsockfd, tempBuffer, strlen(tempBuffer), 0) == 0) {
-                              framgrabber = NULL;
-                              close(newsockfd);
-                              return;
-                          }
+
                           tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char *)imgbuffer.get());
-                          //读取并发送
-                          //发送文件大小
-                          int fileSize = getSize("capture.jpg");
-                          char file_size[256];
-                          sprintf(file_size, "%d", fileSize);
-                          send(newsockfd, file_size, strlen(file_size), 0);
-                          //服务端确认收到
-                          int sizeRecv_size;
-                          char sizeBuf[1024];
-                          sizeRecv_size = recv(newsockfd, sizeBuf, 1024, 0);
-                        //   char *sizeRecv = new char[sizeRecv_size + 1];
-                        //   for (int i = 0; i < sizeRecv_size; i++)
-                        //       sizeRecv[i] = sizeBuf[i];
-                        //   sizeRecv[sizeRecv_size] = '\0';
-                        //   if (strcmp(sizeRecv, "size_recv") != 0)
-                        //       break;
+                          //   //读取并发送
+                          //   //发送文件大小
+                          //   int fileSize = getSize("capture.jpg");
+                          //   char file_size[256];
+                          //   sprintf(file_size, "%d", fileSize);
+                          //   send(newsockfd, file_size, strlen(file_size), 0);
+                          //   //服务端确认收到
+                          //   int sizeRecv_size;
+                          //   char sizeBuf[1024];
+                          //   sizeRecv_size = recv(newsockfd, sizeBuf, 1024, 0);
+                          // //   char *sizeRecv = new char[sizeRecv_size + 1];
+                          //   for (int i = 0; i < sizeRecv_size; i++)
+                          //       sizeRecv[i] = sizeBuf[i];
+                          //   sizeRecv[sizeRecv_size] = '\0';
+                          //   if (strcmp(sizeRecv, "size_recv") != 0)
+                          //       break;
                           file = fopen("capture.jpg", "rb");
                           char buf[1024];
                           while (!feof(file)) {
@@ -121,6 +118,8 @@ void createframegrabber(int newsockfd)
                               send(newsockfd, buf, readlen, 0);
                           }
                           fclose(file);
+                          char sizeBuf[1024];
+                          recv(newsockfd, sizeBuf, 1024, 0);
                           // if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() -
                           // onNewFramestart).count() >=
                           //     1000) {

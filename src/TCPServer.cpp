@@ -126,14 +126,14 @@ void createframegrabber(int newsockfd)
                         //   cout << "received ack file!!!" << endl;
 
 
-                          // if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() -
-                          // onNewFramestart).count() >=
-                          //     1000) {
-                          //     std::cout << "onNewFrame fps" << onNewFramecounter << std::endl;
-                          //     onNewFramecounter = 0;
-                          //     onNewFramestart = std::chrono::high_resolution_clock::now();
-                          // }
-                          // onNewFramecounter += 1;
+                          if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() -
+                          onNewFramestart).count() >=
+                              1000) {
+                              std::cout << "onNewFrame fps" << onNewFramecounter << std::endl;
+                              onNewFramecounter = 0;
+                              onNewFramestart = std::chrono::high_resolution_clock::now();
+                          }
+                          onNewFramecounter += 1;
                       })
                       ->start_capturing();
     ;

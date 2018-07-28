@@ -28,6 +28,7 @@
         "utility": "cpp",
         "string": "cpp",
         "chrono": "cpp",
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "ostream": "cpp"
     }
 }

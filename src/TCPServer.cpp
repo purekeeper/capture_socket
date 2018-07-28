@@ -78,8 +78,6 @@ void createframegrabber(int newsockfd)
                       auto mons = SL::Screen_Capture::GetMonitors();
                       std::cout << "Library is requesting the list of monitors to capture!" << std::endl;
                       for (auto &m : mons) {
-                          m.Height = 200;
-                          m.Width = 100;
                           std::cout << m << std::endl;
                       }
                       return mons;
@@ -91,8 +89,7 @@ void createframegrabber(int newsockfd)
                           auto size = Width(img) * Height(img) * sizeof(SL::Screen_Capture::ImageBGRA);
                           auto imgbuffer(std::make_unique<unsigned char[]>(size));
                           ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
-                          auto tempBuffer = (const char *)imgbuffer.get();
-
+                          cout << "write img!!!" << endl;
                           tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char *)imgbuffer.get());
                           //   //读取并发送
                           //   //发送文件大小
@@ -110,16 +107,21 @@ void createframegrabber(int newsockfd)
                           //   sizeRecv[sizeRecv_size] = '\0';
                           //   if (strcmp(sizeRecv, "size_recv") != 0)
                           //       break;
+                          cout << "fopen!!!" << endl;
                           file = fopen("capture.jpg", "rb");
                           char buf[1024];
+                          cout << "begin send file!!!" << endl;
                           while (!feof(file)) {
                               memset(buf, 0, sizeof(buf));
                               size_t readlen = fread(buf, sizeof(char), sizeof(buf), file);
                               send(newsockfd, buf, readlen, 0);
                           }
+                          cout << "over send file!!!" << endl;
                           fclose(file);
                           char sizeBuf[1024];
+                          cout << "receive ack file!!!" << endl;
                           recv(newsockfd, sizeBuf, 1024, 0);
+                          cout << "received ack file!!!" << endl;
                           // if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() -
                           // onNewFramestart).count() >=
                           //     1000) {

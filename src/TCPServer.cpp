@@ -107,21 +107,25 @@ void createframegrabber(int newsockfd)
                           //   sizeRecv[sizeRecv_size] = '\0';
                           //   if (strcmp(sizeRecv, "size_recv") != 0)
                           //       break;
-                          cout << "fopen!!!" << endl;
-                          file = fopen("capture.jpg", "rb");
-                          char buf[1024];
-                          cout << "begin send file!!!" << endl;
-                          while (!feof(file)) {
-                              memset(buf, 0, sizeof(buf));
-                              size_t readlen = fread(buf, sizeof(char), sizeof(buf), file);
-                              send(newsockfd, buf, readlen, 0);
-                          }
-                          cout << "over send file!!!" << endl;
-                          fclose(file);
-                          char sizeBuf[1024];
-                          cout << "receive ack file!!!" << endl;
-                          recv(newsockfd, sizeBuf, 1024, 0);
-                          cout << "received ack file!!!" << endl;
+
+
+                        //   cout << "fopen!!!" << endl;
+                        //   file = fopen("capture.jpg", "rb");
+                        //   char buf[1024];
+                        //   cout << "begin send file!!!" << endl;
+                        //   while (!feof(file)) {
+                        //       memset(buf, 0, sizeof(buf));
+                        //       size_t readlen = fread(buf, sizeof(char), sizeof(buf), file);
+                        //       send(newsockfd, buf, readlen, 0);
+                        //   }
+                        //   cout << "over send file!!!" << endl;
+                        //   fclose(file);
+                        //   char sizeBuf[1024];
+                        //   cout << "receive ack file!!!" << endl;
+                        //   recv(newsockfd, sizeBuf, 1024, 0);
+                        //   cout << "received ack file!!!" << endl;
+
+
                           // if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() -
                           // onNewFramestart).count() >=
                           //     1000) {

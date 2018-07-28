@@ -103,3 +103,31 @@ windowframgrabber->setMouseChangeInterval(std::chrono::milliseconds(100));//100 
     IScreenCaptureManager::resume: all threads will resume capturing.
     </li>
 </ul>
+
+
+	const char *file_name = (i + ".jpg").c_str();
+	// 打开文件，准备写入
+	FILE *fp = fopen(file_name, "w");
+	if (NULL == fp)
+	{
+		printf("File:\t%s Can Not Open To Write\n", file_name);
+		exit(1);
+	}
+
+	// 从服务器接收数据到buffer中
+	// 每接收一段数据，便将其写入文件中，循环直到文件接收完并写完为止
+	char buffer[BUFFER_SIZE];
+	bzero(buffer, BUFFER_SIZE);
+	int length = 0;
+	while ((length = recv(newsockfd, buffer, BUFFER_SIZE, 0)) > 0)
+	{
+		if (fwrite(buffer, sizeof(char), length, fp) < length)
+		{
+			printf("File:\t%s Write Failed\n", file_name);
+			break;
+		}
+		bzero(buffer, BUFFER_SIZE);
+	}
+
+	// 接收成功后，关闭文件，关闭socket
+	printf("Receive File:\t%s From Server IP Successful!\n", file_name);

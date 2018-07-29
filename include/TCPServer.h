@@ -22,9 +22,6 @@ class TCPServer
 {
 	public:
 	int sockfd, n, pid;
-	//list<int> sockfdList(100);
-	//std::atomic<bool> capture=false;
-	//std::atomic<bool> sendImg=false;
 	struct sockaddr_in serverAddress;
 	struct sockaddr_in clientAddress;
 	pthread_t serverThread;

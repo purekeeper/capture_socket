@@ -40,45 +40,18 @@ void ExtractAndConvertToRGBA(const SL::Screen_Capture::Image &img, unsigned char
 
 using namespace std::chrono_literals;
 std::shared_ptr<SL::Screen_Capture::IScreenCaptureManager> framgrabber;
-
-// inline std::ostream &operator<<(std::ostream &os, const SL::Screen_Capture::ImageRect &p)
-// {
-//     return os << "left=" << p.left << " top=" << p.top << " right=" << p.right << " bottom=" << p.bottom;
-// }
-// inline std::ostream &operator<<(std::ostream &os, const SL::Screen_Capture::Monitor &p)
-// {
-//     return os << "Id=" << p.Id << " Index=" << p.Index << " Height=" << p.Height << " Width=" << p.Width << " OffsetX=" << p.OffsetX
-//               << " OffsetY=" << p.OffsetY << " Name=" << p.Name;
-// }
-
 auto onNewFramestart = std::chrono::high_resolution_clock::now();
-size_t getSize(string path)
-{
-    FILE *file;
-    file = fopen(path.c_str(), "rb");
-    size_t sizeOfPic;
-
-    fseek(file, 0, SEEK_END); ///将文件指针移动文件结尾
-    sizeOfPic = ftell(file);  ///求出当前文件指针距离文件开始的字节数
-    fclose(file);
-
-    return sizeOfPic;
-}
-
 void sendFile(int newsockfd)
 {
     FILE *file;
-    cout << "fopen!!!" << endl;
     while (true) {
         char buf[1024 * 1000];
         file = fopen("capture.jpg", "rb");
         memset(buf, 0, sizeof(buf));
         size_t readlen = fread(buf, sizeof(char), sizeof(buf), file);
-        cout << "length" << readlen << endl;
         //发送文件大小
         char file_size[256];
         sprintf(file_size, "%d", (int)readlen);
-        cout << "file_size" << file_size << endl;
         if (send(newsockfd, file_size, strlen(file_size), 0) == -1) {
             return;
         }
@@ -144,7 +117,6 @@ string TCPServer::receive()
     while (1) {
         socklen_t sosize = sizeof(clientAddress);
         int newsockfd = accept(sockfd, (struct sockaddr *)&clientAddress, &sosize);
-        cout << "sock" << newsockfd << endl;
         str = inet_ntoa(clientAddress.sin_addr);
         pthread_create(&serverThread, NULL, &Task, (void *)&newsockfd);
     }

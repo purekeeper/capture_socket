@@ -21,6 +21,7 @@
 #include "lodepng.h"
 /////////////////////////////////////////////////////////////////////////
 string TCPServer::Message;
+
 void ExtractAndConvertToRGBA(const SL::Screen_Capture::Image &img, unsigned char *dst, size_t dst_size)
 {
     assert(dst_size >= static_cast<size_t>(SL::Screen_Capture::Width(img) * SL::Screen_Capture::Height(img) * sizeof(SL::Screen_Capture::ImageBGRA)));
@@ -67,10 +68,60 @@ size_t getSize(string path)
 
     return sizeOfPic;
 }
-void createframegrabber(int newsockfd)
-{
-    FILE *file;
 
+void sendFile(int newsockfd){
+FILE *file;
+ cout << "fopen!!!" << endl;
+ //file = fopen("capture.jpg", "rb");
+ while(true){
+   char buf[1024*1000];
+                          file = fopen("capture.jpg", "rb");
+                                memset(buf, 0, sizeof(buf));
+                              size_t readlen = fread(buf, sizeof(char), sizeof(buf), file);
+                              cout<<"length"<<readlen<<endl;
+                              //读取并发送
+                             //发送文件大小
+                              cout<<"1111111"<<endl;
+
+                             cout<<"2222222"<<endl;
+                            char file_size[256];
+                            sprintf(file_size, "%d", (int)readlen);
+                            cout<<"file_size"<<file_size<<endl;
+                            if(send(newsockfd, file_size, strlen(file_size), 0)==-1){
+                            return;}
+                             cout<<"777777"<<endl;
+                             //服务端确认收
+                             int sizeRecv_size;
+                             char sizeBuf[1024];
+                            if( (sizeRecv_size = recv(newsockfd, sizeBuf, 1024, 0))==-1){
+                            return;}
+                             cout<<"ack="<<sizeRecv_size<<endl;
+
+                          cout << "begin send file!!!" << endl;
+                          int i=0;
+                          cout << "seding!!!"<<i++ << endl;
+
+                              if(send(newsockfd, buf, readlen, 0)==-1){return;}
+                              cout<<"22222222"<<readlen<<endl;
+                          cout << "over send file!!!" << endl;
+                        //  fclose(file);
+                          char fileBuff[1024];
+                          cout << "receive ack file!!!" << endl;
+
+                         if( recv(newsockfd, fileBuff, 1024, 0)==-1){
+                         return;}
+                          cout<<fileBuff[0]<<endl;
+                          cout << "received ack file!!!" << endl;
+                            fclose(file);
+}
+                          }
+
+
+void TCPServer::createframegrabber()
+{
+    pthread_detach(pthread_self());
+
+//cout<<"sock_id_111"<<newsockfd<<endl;
     realcounter = 0;
     onNewFramecounter = 0;
     framgrabber = nullptr;
@@ -84,54 +135,13 @@ void createframegrabber(int newsockfd)
                   })
                       ->onNewFrame([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
                           cout << "onNewFrame!!!!";
-                          auto r = realcounter.fetch_add(1);
+                         // auto r = realcounter.fetch_add(1);
                           auto s = std::string("capture.jpg");
                           auto size = Width(img) * Height(img) * sizeof(SL::Screen_Capture::ImageBGRA);
                           auto imgbuffer(std::make_unique<unsigned char[]>(size));
                           ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
                           cout << "write img!!!" << endl;
                           tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char *)imgbuffer.get());
-                          //   //读取并发送
-                          //   //发送文件大小
-                          //   int fileSize = getSize("capture.jpg");
-                          //   char file_size[256];
-                          //   sprintf(file_size, "%d", fileSize);
-                          //   send(newsockfd, file_size, strlen(file_size), 0);
-                          //   //服务端确认收到
-                          //   int sizeRecv_size;
-                          //   char sizeBuf[1024];
-                          //   sizeRecv_size = recv(newsockfd, sizeBuf, 1024, 0);
-                          // //   char *sizeRecv = new char[sizeRecv_size + 1];
-                          //   for (int i = 0; i < sizeRecv_size; i++)
-                          //       sizeRecv[i] = sizeBuf[i];
-                          //   sizeRecv[sizeRecv_size] = '\0';
-                          //   if (strcmp(sizeRecv, "size_recv") != 0)
-                          //       break;
-
-                          cout << "fopen!!!" << endl;
-                          file = fopen("capture.jpg", "rb");
-                          char buf[1024];
-                          cout << "begin send file!!!" << endl;
-                          while (!feof(file)) {
-                              memset(buf, 0, sizeof(buf));
-                              size_t readlen = fread(buf, sizeof(char), sizeof(buf), file);
-                              send(newsockfd, buf, readlen, 0);
-                          }
-                          cout << "over send file!!!" << endl;
-                          fclose(file);
-                          char sizeBuf[1024];
-                          cout << "receive ack file!!!" << endl;
-                          recv(newsockfd, sizeBuf, 1024, 0);
-                          cout << "received ack file!!!" << endl;
-
-                          //   if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() -
-                          //   onNewFramestart).count() >=
-                          //       1000) {
-                          //       std::cout << "onNewFrame fps" << onNewFramecounter << std::endl;
-                          //       onNewFramecounter = 0;
-                          //       onNewFramestart = std::chrono::high_resolution_clock::now();
-                          //   }
-                          //   onNewFramecounter += 1;
                       })
                       ->start_capturing();
     ;
@@ -142,26 +152,13 @@ void *TCPServer::Task(void *arg)
 
     cout << "connect success!!!" << endl;
     int n;
-    int newsockfd = (long)arg;
+    int newsockfd = *((int*)arg);
+
     char msg[MAXPACKETSIZE];
     pthread_detach(pthread_self());
-
-    createframegrabber(newsockfd);
-
-    std::this_thread::sleep_for(std::chrono::seconds(100000));
-
-    while (1) {
-        n = recv(newsockfd, msg, MAXPACKETSIZE, 0);
-        if (n == 0) {
-            framgrabber = NULL;
-            close(newsockfd);
-            break;
-        }
-        // msg[n] = 0;
-        // // send(newsockfd,msg,n,0);
-        // Message = string(msg);
-    }
-
+  //  createframegrabber();
+  sendFile(newsockfd);
+  //  std::this_thread::sleep_for(std::chrono::seconds(100000));
     return 0;
 }
 
@@ -181,16 +178,20 @@ string TCPServer::receive()
     string str;
     while (1) {
         socklen_t sosize = sizeof(clientAddress);
-        newsockfd = accept(sockfd, (struct sockaddr *)&clientAddress, &sosize);
+        int newsockfd = accept(sockfd, (struct sockaddr *)&clientAddress, &sosize);
+        cout<<"sock"<<newsockfd<<endl;
+       // sockfdList.push_back(newsockfd);
         str = inet_ntoa(clientAddress.sin_addr);
-        pthread_create(&serverThread, NULL, &Task, (void *)newsockfd);
+        pthread_create(&serverThread, NULL, &Task, (void*) &newsockfd);
     }
     return str;
 }
 
 string TCPServer::getMessage() { return Message; }
 
-void TCPServer::Send(string msg) { send(newsockfd, msg.c_str(), msg.length(), 0); }
+void TCPServer::Send(string msg) {
+ //send(newsockfd, msg.c_str(), msg.length(), 0);
+ }
 
 void TCPServer::clean()
 {
@@ -201,5 +202,5 @@ void TCPServer::clean()
 void TCPServer::detach()
 {
     close(sockfd);
-    close(newsockfd);
+   // close(newsockfd);
 }

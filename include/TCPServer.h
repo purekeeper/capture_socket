@@ -7,13 +7,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/types.h> 
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <string.h>
 #include <arpa/inet.h>
 #include <pthread.h>
-
+#include<list>
 using namespace std;
 
 #define MAXPACKETSIZE 4096
@@ -21,7 +21,10 @@ using namespace std;
 class TCPServer
 {
 	public:
-	int sockfd, newsockfd, n, pid;
+	int sockfd, n, pid;
+	//list<int> sockfdList(100);
+	//std::atomic<bool> capture=false;
+	//std::atomic<bool> sendImg=false;
 	struct sockaddr_in serverAddress;
 	struct sockaddr_in clientAddress;
 	pthread_t serverThread;
@@ -34,7 +37,7 @@ class TCPServer
 	void Send(string msg);
 	void detach();
 	void clean();
-
+void createframegrabber();
 	private:
 	static void * Task(void * argv);
 };

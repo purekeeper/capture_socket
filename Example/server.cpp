@@ -1,17 +1,17 @@
 #include "TCPServer.h"
 #include <iostream>
-
+#include <fstream>
 TCPServer tcp;
 
 int main()
 {
     //从配置文件读取监听端口号
-    FILE *file;
-    char buf[100];
-    file = fopen("config", "rb");
-    memset(buf, 0, sizeof(buf));
-    fread(buf, sizeof(char), sizeof(buf), file);
-    int port = atoi(buf);
+    ifstream in("config");
+    string line;
+    if(in){
+    //port
+    getline(in,line);
+     int port = atoi(line.c_str());
     cout << "监听port" << port << endl;
     //启动截图
     tcp.createframegrabber();
@@ -19,5 +19,6 @@ int main()
     tcp.setup(port);
     //监听
     tcp.receive();
+    }
     return 0;
 }

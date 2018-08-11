@@ -11,7 +11,7 @@
 #include <string>
 #include <thread>
 #include <vector>
-
+#include<fstream>
 #define TJE_IMPLEMENTATION
 #include "tiny_jpeg.h"
 #define LODEPNG_COMPILE_PNG
@@ -77,17 +77,43 @@ void sendFile(int newsockfd)
 void TCPServer::createframegrabber()
 {
     pthread_detach(pthread_self());
-    framgrabber = nullptr;
-    framgrabber = SL::Screen_Capture::CreateCaptureConfiguration([]() { return SL::Screen_Capture::GetMonitors(); })
-                      ->onNewFrame([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
-                          auto s = std::string("capture.jpg");
-                          auto size = Width(img) * Height(img) * sizeof(SL::Screen_Capture::ImageBGRA);
-                          auto imgbuffer(std::make_unique<unsigned char[]>(size));
-                          ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
-                          tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char *)imgbuffer.get());
-                      })
-                      ->start_capturing();
-    ;
+       framgrabber = nullptr;
+    framgrabber =
+        SL::Screen_Capture::CreateCaptureConfiguration([]() {
+
+        auto windows = SL::Screen_Capture::GetWindows();
+         ifstream in("config");
+    string line;
+    if(in){
+    //port
+    getline(in,line);
+    getline(in,line);}
+        std::string srchterm = line;
+        // convert to lower case for easier comparisons
+        std::transform(srchterm.begin(), srchterm.end(), srchterm.begin(), [](char c) { return std::tolower(c, std::locale()); });
+        decltype(windows) filtereditems;
+        for (auto &a : windows) {
+            std::string name = a.Name;
+            std::transform(name.begin(), name.end(), name.begin(), [](char c) { return std::tolower(c, std::locale()); });
+            if (name.find(srchterm) != std::string::npos) {
+                filtereditems.push_back(a);
+                std::cout << "发现窗体srchterm" << a.Size.y << "  Width  " << a.Size.x << "   " << a.Name << std::endl;
+            }
+        }
+        return filtereditems;
+    })
+        ->onNewFrame([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Window &window) {
+
+        auto s = std::string("capture.jpg");
+        auto size = Width(img) * Height(img) * sizeof(SL::Screen_Capture::ImageBGRA);
+
+         auto imgbuffer(std::make_unique<unsigned char[]>(size));
+         ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
+         tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
+    })
+
+        ->start_capturing();
+
     framgrabber->setFrameChangeInterval(std::chrono::milliseconds(500));
 }
 void *TCPServer::Task(void *arg)
